@@ -56,3 +56,17 @@ async def test_parent_validation():
         result = await c.call_tool("list_ads", {"account_id": "1", "adset_id": "2"})
     assert result.is_error
     assert "exactly one" in result.content[0].text
+
+
+async def test_token_never_appears_in_errors():
+    token = "EAAgRFHWWfZBEBSz7n22YYTiMr1WJKoIZAKzflnML"
+
+    def handler(request):
+        return httpx.Response(400, json={"error": {"message": f"Malformed access token {token}{token}", "code": 190}})
+
+    server._client = MetaClient(token, transport=httpx.MockTransport(handler))
+    async with Client(server.mcp) as c:
+        result = await c.call_tool("list_ad_accounts", {})
+    assert result.is_error
+    assert "EAA" not in result.content[0].text
+    assert "[token hidden]" in result.content[0].text

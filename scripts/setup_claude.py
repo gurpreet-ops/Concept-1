@@ -105,9 +105,19 @@ async def check_google(env: dict[str, str]) -> None:
         await client.aclose()
 
 
+def _check_meta_token(token: str) -> str | None:
+    half = len(token) // 2
+    if len(token) % 2 == 0 and token[:half] == token[half:]:
+        return "It looks like the token was pasted twice. Paste it once and press Enter."
+    if not token.startswith("EAA") or not token.isalnum():
+        return "That doesn't look like a Meta token: it should start with EAA and have no spaces."
+    return None
+
+
 def setup_meta() -> None:
     print("\n=== Meta Ads ===")
-    token = ask("Meta access token (typing is hidden)", secret=True, optional=True)
+    token = ask("Meta access token (starts with EAA, typing is hidden)", secret=True, optional=True,
+                check=_check_meta_token)
     if not token:
         print("  Skipped. Run this script again once you have the token.")
         return

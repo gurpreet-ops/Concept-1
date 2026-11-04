@@ -6,6 +6,7 @@ import hashlib
 import hmac
 import json
 import os
+import re
 from typing import Any
 
 import httpx
@@ -14,6 +15,14 @@ from mcp.server.mcpserver.exceptions import ToolError
 from ads_mcp.common import require_env
 
 DEFAULT_API_VERSION = "v24.0"
+
+# Meta access tokens start with "EAA". Meta sometimes echoes the token back in error
+# messages ("Malformed access token EAA..."), so scrub anything token-shaped.
+_TOKEN_RE = re.compile(r"EAA[A-Za-z0-9]{20,}")
+
+
+def redact(text: str) -> str:
+    return _TOKEN_RE.sub("[token hidden]", text)
 
 
 def normalize_account_id(account_id: str) -> str:
@@ -67,10 +76,10 @@ class MetaClient:
             raise ToolError(f"Meta API returned non-JSON response (HTTP {resp.status_code})")
         if resp.status_code >= 400 or "error" in data:
             err = data.get("error", {})
-            raise ToolError(
+            raise ToolError(redact(
                 f"Meta API error (HTTP {resp.status_code}): {err.get('message', data)} "
                 f"[type={err.get('type')}, code={err.get('code')}, subcode={err.get('error_subcode')}]"
-            )
+            ))
         return data
 
     async def get(self, path: str, params: dict[str, Any] | None = None) -> dict:
