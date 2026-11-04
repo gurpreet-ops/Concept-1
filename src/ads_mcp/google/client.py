@@ -80,7 +80,15 @@ class GoogleAdsClient:
         )
         data = resp.json()
         if resp.status_code >= 400:
-            raise ToolError(f"Google OAuth token refresh failed: {data.get('error_description') or data}")
+            hint = {
+                "invalid_client": "the client ID or secret is wrong, or the secret was deleted",
+                "invalid_grant": "the refresh token is wrong, expired or revoked; get a new one",
+                "unauthorized_client": "the refresh token was issued to a different OAuth client",
+            }.get(data.get("error"), "")
+            raise ToolError(
+                f"Google OAuth token refresh failed: {data.get('error')}: "
+                f"{data.get('error_description', '')}{f' ({hint})' if hint else ''}"
+            )
         self._access_token = data["access_token"]
         self._expires_at = time.time() + int(data.get("expires_in", 3600))
         return self._access_token
