@@ -9,11 +9,16 @@ nothing is written to this repo.
 
 from __future__ import annotations
 
+import asyncio
 import getpass
 import shutil
 import subprocess
 import sys
 from pathlib import Path
+
+from google_ads_refresh_token import get_refresh_token
+
+from ads_mcp.google.client import GoogleAdsClient
 
 BIN = Path(__file__).resolve().parent.parent / ".venv" / "bin"
 
@@ -60,12 +65,17 @@ def setup_google() -> None:
             check=lambda v: None if v.startswith("GOCSPX-")
             else "The client secret should start with GOCSPX-",
         ),
-        "GOOGLE_ADS_REFRESH_TOKEN": ask(
+    }
+    if input("Do you already have a refresh token? [y/N]: ").strip().lower() == "y":
+        env["GOOGLE_ADS_REFRESH_TOKEN"] = ask(
             "Refresh token (starts with 1//, typing is hidden)", secret=True,
             check=lambda v: "That's the access token (ya29.). Use the refresh token, starting with 1//"
             if v.startswith("ya29.") else None,
-        ),
-    }
+        )
+    else:
+        env["GOOGLE_ADS_REFRESH_TOKEN"] = get_refresh_token(
+            env["GOOGLE_ADS_CLIENT_ID"], env["GOOGLE_ADS_CLIENT_SECRET"])
+        print("  ✓ Got a refresh token from Google")
     manager = ask(
         "Manager (MCC) account ID, e.g. 123-456-7890", optional=True,
         check=lambda v: None if v.replace("-", "").isdigit() else "Use digits only, e.g. 123-456-7890",
@@ -73,6 +83,25 @@ def setup_google() -> None:
     if manager:
         env["GOOGLE_ADS_LOGIN_CUSTOMER_ID"] = manager.replace("-", "")
     register("google-ads", env, BIN / "google-ads-mcp")
+    asyncio.run(check_google(env))
+
+
+async def check_google(env: dict[str, str]) -> None:
+    print("  Testing the credentials with Google...")
+    client = GoogleAdsClient(
+        developer_token=None,
+        client_id=env["GOOGLE_ADS_CLIENT_ID"],
+        client_secret=env["GOOGLE_ADS_CLIENT_SECRET"],
+        refresh_token=env["GOOGLE_ADS_REFRESH_TOKEN"],
+        login_customer_id=env.get("GOOGLE_ADS_LOGIN_CUSTOMER_ID"),
+    )
+    try:
+        customers = await client.list_accessible_customers()
+        print(f"  ✓ Google Ads works. Accounts you can access: {', '.join(customers) or 'none'}")
+    except Exception as e:  # report and carry on; the server is registered either way
+        print(f"  ✗ Google rejected the credentials: {e}")
+    finally:
+        await client.aclose()
 
 
 def setup_meta() -> None:
