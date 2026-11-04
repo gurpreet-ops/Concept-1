@@ -52,6 +52,7 @@ class GoogleAdsClient:
         self._http = httpx.AsyncClient(timeout=120, transport=transport)
         self._access_token: str | None = None
         self._expires_at = 0.0
+        self._accessible: list[str] | None = None
 
     @classmethod
     def from_env(cls) -> GoogleAdsClient:
@@ -97,15 +98,30 @@ class GoogleAdsClient:
         headers = {"Authorization": f"Bearer {await self._token()}"}
         if self.developer_token:
             headers["developer-token"] = self.developer_token
-        login = normalize_customer_id(login_customer_id) if login_customer_id else self.login_customer_id
-        if login:
-            headers["login-customer-id"] = login
+        if login_customer_id:
+            headers["login-customer-id"] = login_customer_id
         return headers
 
+    async def _default_login(self, customer_id: str) -> str | None:
+        """Pick the login-customer-id when none is configured.
+
+        A client account reached through a manager needs the manager's ID in the
+        login-customer-id header. If the user can access exactly one account and it
+        isn't the one being queried, that account must be the manager.
+        """
+        if self._accessible is None:
+            self._accessible = await self.list_accessible_customers()
+        if customer_id not in self._accessible and len(self._accessible) == 1:
+            return self._accessible[0]
+        return None
+
     async def _call(self, method: str, path: str, json: dict | None = None,
-                    login_customer_id: str | None = None) -> dict:
+                    login_customer_id: str | None = None, customer_id: str | None = None) -> dict:
+        login = normalize_customer_id(login_customer_id) if login_customer_id else self.login_customer_id
+        if not login and customer_id:
+            login = await self._default_login(customer_id)
         resp = await self._http.request(
-            method, f"{self.base_url}/{path}", json=json, headers=await self._headers(login_customer_id)
+            method, f"{self.base_url}/{path}", json=json, headers=await self._headers(login)
         )
         if resp.status_code >= 400:
             raise ToolError(_format_error(resp))
@@ -122,7 +138,8 @@ class GoogleAdsClient:
         rows: list[dict] = []
         body: dict = {"query": query}
         while len(rows) < max_rows:
-            data = await self._call("POST", f"customers/{cid}/googleAds:search", body, login_customer_id)
+            data = await self._call("POST", f"customers/{cid}/googleAds:search", body,
+                                    login_customer_id, customer_id=cid)
             rows.extend(_add_currency_units(flatten(r)) for r in data.get("results", []))
             token = data.get("nextPageToken")
             if not token:

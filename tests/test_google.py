@@ -68,3 +68,24 @@ async def test_api_error_message():
         result = await c.call_tool("list_accessible_customers", {})
     assert result.is_error
     assert "User doesn't have permission" in result.content[0].text
+
+
+async def test_manager_detected_when_login_customer_id_unset():
+    seen = []
+
+    def handler(request: httpx.Request):
+        if request.url.host == "oauth2.googleapis.com":
+            return httpx.Response(200, json={"access_token": "at", "expires_in": 3600})
+        if request.url.path.endswith("listAccessibleCustomers"):
+            return httpx.Response(200, json={"resourceNames": ["customers/6376400525"]})
+        seen.append((request.url.path, request.headers.get("login-customer-id")))
+        return httpx.Response(200, json={"results": []})
+
+    server._client = GoogleAdsClient(None, "cid", "secret", "refresh", transport=httpx.MockTransport(handler))
+    async with Client(server.mcp) as c:
+        assert not (await c.call_tool("list_campaigns", {"customer_id": "111-222-3333"})).is_error
+        assert not (await c.call_tool("list_campaigns", {"customer_id": "6376400525"})).is_error
+    assert seen == [
+        ("/v24/customers/1112223333/googleAds:search", "6376400525"),  # client account: via manager
+        ("/v24/customers/6376400525/googleAds:search", None),  # the manager itself: no header needed
+    ]
