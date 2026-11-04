@@ -62,6 +62,14 @@ Steps:
 
 ### Claude Code
 
+Easiest: run the setup script. It asks for each value (secrets are typed hidden) and registers both servers for you:
+
+```bash
+.venv/bin/python scripts/setup_claude.py
+```
+
+Or add them by hand:
+
 ```bash
 claude mcp add meta-ads --env META_ACCESS_TOKEN=YOUR_TOKEN -- /path/to/Concept-1/.venv/bin/meta-ads-mcp
 ```
