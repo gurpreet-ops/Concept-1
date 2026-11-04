@@ -83,9 +83,17 @@ claude mcp add google-ads \
   -- /path/to/Concept-1/.venv/bin/google-ads-mcp
 ```
 
-### Claude Desktop / other clients
+### Claude desktop app
 
-Add the servers to the client's MCP config (for Claude Desktop that's `claude_desktop_config.json`). `mcp.example.json` in this repo has a template.
+After `scripts/setup_claude.py` has worked, copy the same servers into the Claude desktop app (no need to re-enter anything), then quit and reopen the app:
+
+```bash
+.venv/bin/python scripts/add_to_claude_desktop.py
+```
+
+### Other clients
+
+Add the servers to the client's MCP config. `mcp.example.json` in this repo has a template.
 
 ## Tools
 
