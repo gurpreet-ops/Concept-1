@@ -1,0 +1,20 @@
+{
+  "mcpServers": {
+    "meta-ads": {
+      "command": "/path/to/Concept-1/.venv/bin/meta-ads-mcp",
+      "env": {
+        "META_ACCESS_TOKEN": "YOUR_META_TOKEN"
+      }
+    },
+    "google-ads": {
+      "command": "/path/to/Concept-1/.venv/bin/google-ads-mcp",
+      "env": {
+        "GOOGLE_ADS_DEVELOPER_TOKEN": "YOUR_DEVELOPER_TOKEN",
+        "GOOGLE_ADS_CLIENT_ID": "YOUR_CLIENT_ID.apps.googleusercontent.com",
+        "GOOGLE_ADS_CLIENT_SECRET": "YOUR_CLIENT_SECRET",
+        "GOOGLE_ADS_REFRESH_TOKEN": "YOUR_REFRESH_TOKEN",
+        "GOOGLE_ADS_LOGIN_CUSTOMER_ID": "1234567890"
+      }
+    }
+  }
+}
