@@ -8,7 +8,7 @@ from ads_mcp.google.client import GoogleAdsClient
 
 
 def make_client(handler):
-    return GoogleAdsClient("dev", "cid", "secret", "refresh", login_customer_id="111-222-3333",
+    return GoogleAdsClient(None, "cid", "secret", "refresh", login_customer_id="111-222-3333",
                            transport=httpx.MockTransport(handler))
 
 
@@ -39,7 +39,7 @@ async def test_campaign_performance_flattens_and_pages():
     assert len(rows) == 2
     req, body = seen[0]
     assert req.url.path == "/v24/customers/1234567890/googleAds:search"
-    assert req.headers["developer-token"] == "dev"
+    assert "developer-token" not in req.headers
     assert req.headers["login-customer-id"] == "1112223333"
     assert req.headers["authorization"] == "Bearer at"
     assert "BETWEEN '2026-10-01' AND '2026-10-31'" in body["query"]

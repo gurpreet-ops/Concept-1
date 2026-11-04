@@ -35,7 +35,7 @@ def _add_currency_units(row: dict) -> dict:
 class GoogleAdsClient:
     def __init__(
         self,
-        developer_token: str,
+        developer_token: str | None,
         client_id: str,
         client_secret: str,
         refresh_token: str,
@@ -56,7 +56,9 @@ class GoogleAdsClient:
     @classmethod
     def from_env(cls) -> GoogleAdsClient:
         return cls(
-            developer_token=require_env("GOOGLE_ADS_DEVELOPER_TOKEN"),
+            # Optional: since the Sept 2026 sunset, access comes from the Cloud project that owns
+            # the OAuth client, and the API ignores this header if sent.
+            developer_token=os.environ.get("GOOGLE_ADS_DEVELOPER_TOKEN") or None,
             client_id=require_env("GOOGLE_ADS_CLIENT_ID"),
             client_secret=require_env("GOOGLE_ADS_CLIENT_SECRET"),
             refresh_token=require_env("GOOGLE_ADS_REFRESH_TOKEN"),
@@ -84,10 +86,9 @@ class GoogleAdsClient:
         return self._access_token
 
     async def _headers(self, login_customer_id: str | None) -> dict[str, str]:
-        headers = {
-            "Authorization": f"Bearer {await self._token()}",
-            "developer-token": self.developer_token,
-        }
+        headers = {"Authorization": f"Bearer {await self._token()}"}
+        if self.developer_token:
+            headers["developer-token"] = self.developer_token
         login = normalize_customer_id(login_customer_id) if login_customer_id else self.login_customer_id
         if login:
             headers["login-customer-id"] = login

@@ -40,20 +40,23 @@ How to get a long-lived token:
 
 | Variable | Required | Notes |
 |---|---|---|
-| `GOOGLE_ADS_DEVELOPER_TOKEN` | yes | From **Tools → API Center** in a Google Ads *manager* account |
-| `GOOGLE_ADS_CLIENT_ID` | yes | OAuth client (type **Desktop app**) from Google Cloud Console |
+| `GOOGLE_ADS_CLIENT_ID` | yes | OAuth client from Google Cloud Console (Desktop app, or Web app with the OAuth Playground redirect) |
 | `GOOGLE_ADS_CLIENT_SECRET` | yes | |
 | `GOOGLE_ADS_REFRESH_TOKEN` | yes | Generate it with the helper script below |
 | `GOOGLE_ADS_LOGIN_CUSTOMER_ID` | if using an MCC | Your manager account ID, when you reach client accounts through it |
 | `GOOGLE_ADS_API_VERSION` | no | Defaults to `v24` |
+| `GOOGLE_ADS_DEVELOPER_TOKEN` | no | Ignored by Google since developer tokens were retired (Sept 9, 2026); only sent if set |
+
+Since September 9, 2026, Google Ads API access is granted to the **Google Cloud project** that owns your OAuth client, not to a developer token ([details](https://developers.google.com/google-ads/api/docs/api-policy/developer-token)).
 
 Steps:
-1. In [Google Cloud Console](https://console.cloud.google.com/), enable the **Google Ads API**, then create an OAuth client ID of type **Desktop app**.
-2. Get a developer token from your Google Ads manager account (**Tools → API Center**). A token with *Test* access only works on test accounts. Apply for *Basic* access to read real accounts.
-3. Get a refresh token:
+1. In [Google Cloud Console](https://console.cloud.google.com/), enable the **Google Ads API** and create an OAuth client ID (type **Desktop app**). Set the OAuth consent screen to **In production**, or refresh tokens expire after 7 days.
+2. On the [Google Ads API Overview page](https://console.cloud.google.com/google/ads-apis/overview), apply for production access. New projects get *Test* access, which only works on test accounts. *Explorer* (up to 2,880 operations/day) or *Basic* access is needed to read real accounts. The project must have active, non-trial billing.
+3. Get a refresh token, either with the helper script (Desktop client):
    ```bash
    GOOGLE_ADS_CLIENT_ID=... GOOGLE_ADS_CLIENT_SECRET=... python scripts/google_ads_refresh_token.py
    ```
+   or with the [OAuth Playground](https://developers.google.com/oauthplayground) (Web client): tick **Use your own OAuth credentials**, authorize scope `https://www.googleapis.com/auth/adwords`, and exchange the code for tokens.
 
 ## Connect to Claude
 
@@ -65,7 +68,6 @@ claude mcp add meta-ads --env META_ACCESS_TOKEN=YOUR_TOKEN -- /path/to/Concept-1
 
 ```bash
 claude mcp add google-ads \
-  --env GOOGLE_ADS_DEVELOPER_TOKEN=... \
   --env GOOGLE_ADS_CLIENT_ID=... \
   --env GOOGLE_ADS_CLIENT_SECRET=... \
   --env GOOGLE_ADS_REFRESH_TOKEN=... \
