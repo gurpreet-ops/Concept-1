@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "meta-ads": {
+      "command": "bash",
+      "args": ["${CLAUDE_PROJECT_DIR:-.}/scripts/cloud_mcp.sh", "meta-ads-mcp"]
+    },
+    "google-ads": {
+      "command": "bash",
+      "args": ["${CLAUDE_PROJECT_DIR:-.}/scripts/cloud_mcp.sh", "google-ads-mcp"]
+    }
+  }
+}

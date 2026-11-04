@@ -91,6 +91,22 @@ After `scripts/setup_claude.py` has worked, copy the same servers into the Claud
 .venv/bin/python scripts/add_to_claude_desktop.py
 ```
 
+### Claude Code in the cloud (claude.ai/code)
+
+The repo includes a `.mcp.json`, so any cloud session started on this repo gets both servers automatically. On first use, `scripts/cloud_mcp.sh` installs the package into `.venv` (takes about 30 seconds).
+
+You only need to add the credentials once, as environment variables of your cloud environment (on claude.ai/code: environment settings → **Environment variables**; on a self-hosted runner: the runner's environment):
+
+```
+META_ACCESS_TOKEN=...
+GOOGLE_ADS_CLIENT_ID=...
+GOOGLE_ADS_CLIENT_SECRET=...
+GOOGLE_ADS_REFRESH_TOKEN=...
+GOOGLE_ADS_LOGIN_CUSTOMER_ID=...
+```
+
+Then start a session and ask, e.g., "Show Meta and Google Ads spend by campaign for last week". You can also have Claude run that as a scheduled task (e.g. a Monday-morning report). Video creative analysis needs `ffmpeg` and `whisper-cpp`, which cloud sessions usually don't have; the other tools work without them.
+
 ### Other clients
 
 Add the servers to the client's MCP config. `mcp.example.json` in this repo has a template.
