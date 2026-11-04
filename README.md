@@ -107,6 +107,28 @@ Add the servers to the client's MCP config. `mcp.example.json` in this repo has 
 - `list_custom_audiences`
 - `graph_api_get`: any other read-only Graph API path
 
+### Meta video creative analysis (`meta-ads`)
+
+Claude watches your video ads, tags each one with a **category** and **hook type**, and compares what works.
+
+- `list_video_ads`: video ads with spend, **hook rate** (3-sec views ÷ impressions), **hold rate** (ThruPlays ÷ 3-sec views), CTR, CPC and tag status
+- `review_video_creative`: hook frames (first 3 seconds), body frames and a timed transcript of one video
+- `get_creative_taxonomy` / `set_creative_taxonomy`: the category and hook-type lists. Claude proposes them from your top videos; you approve once
+- `tag_video_creative`, `list_creative_tags`: save and view tags (stored per video, so each video is tagged once)
+- `analyze_creative_performance`: metrics grouped by category, hook type, or both, with top and bottom videos
+
+One-time setup on the Mac (free tools, about 500 MB):
+
+```bash
+brew install ffmpeg whisper-cpp
+```
+
+```bash
+.venv/bin/python scripts/setup_video_analysis.py
+```
+
+Tags, transcripts and frame images are stored in `data/` inside this folder (not committed to git). Set `WHISPER_MODEL` to `base` for a smaller, less accurate speech model.
+
 ### Google Ads (`google-ads`)
 - `list_accessible_customers`, `list_client_accounts` (all accounts under an MCC), `get_account_info`
 - `get_account_performance` (totals or daily)

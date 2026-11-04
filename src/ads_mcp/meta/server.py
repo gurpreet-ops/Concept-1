@@ -8,6 +8,7 @@ from mcp.server.mcpserver import MCPServer
 from mcp.server.mcpserver.exceptions import ToolError
 
 from ads_mcp.common import check_date
+from ads_mcp.meta import creative_tools
 from ads_mcp.meta.client import MetaClient, normalize_account_id
 
 mcp = MCPServer(
@@ -15,7 +16,17 @@ mcp = MCPServer(
     instructions=(
         "Read-only access to Meta (Facebook/Instagram) Ads data. Start with list_ad_accounts "
         "to find account IDs, then use get_insights for performance metrics (spend, "
-        "impressions, clicks, conversions, ROAS) at account/campaign/adset/ad level."
+        "impressions, clicks, conversions, ROAS) at account/campaign/adset/ad level.\n\n"
+        "Video creative analysis (what works by category and hook):\n"
+        "1. list_video_ads to see video ads, their hook rate, hold rate, CTR, CPC and tag status.\n"
+        "2. review_video_creative to look at a video: hook frames (first 3s), body frames and the "
+        "timed transcript. Judge the hook from both what is shown and what is said.\n"
+        "3. If get_creative_taxonomy is not approved: review the top-spending videos, propose a short "
+        "list of categories and hook types (with one-line descriptions) to the user, and only call "
+        "set_creative_taxonomy(approved=True) once they approve it. Keep the lists stable afterwards.\n"
+        "4. tag_video_creative for each untagged video, using only approved names.\n"
+        "5. analyze_creative_performance grouped by category, hook_type or both. Flag low_data groups "
+        "instead of drawing conclusions from them, and say how much spend is still untagged."
     ),
 )
 
@@ -237,6 +248,9 @@ def _parent(
     if len(given) == 1 and not account_id:
         return given[0]
     raise ToolError("Pass exactly one of account_id, campaign_id, adset_id or ad_id.")
+
+
+creative_tools.register(mcp, client)
 
 
 def main() -> None:
