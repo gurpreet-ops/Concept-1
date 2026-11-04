@@ -19,6 +19,7 @@ from pathlib import Path
 from google_ads_refresh_token import get_refresh_token
 
 from ads_mcp.google.client import GoogleAdsClient
+from ads_mcp.meta.client import MetaClient
 
 BIN = Path(__file__).resolve().parent.parent / ".venv" / "bin"
 
@@ -111,6 +112,20 @@ def setup_meta() -> None:
         print("  Skipped. Run this script again once you have the token.")
         return
     register("meta-ads", {"META_ACCESS_TOKEN": token}, BIN / "meta-ads-mcp")
+    asyncio.run(check_meta(token))
+
+
+async def check_meta(token: str) -> None:
+    print("  Testing the token with Meta...")
+    client = MetaClient(token)
+    try:
+        accounts = await client.get_all("me/adaccounts", {"fields": "name"}, max_results=200)
+        names = ", ".join(a.get("name", a["id"]) for a in accounts) or "none"
+        print(f"  ✓ Meta Ads works. {len(accounts)} ad account(s): {names}")
+    except Exception as e:  # report and carry on; the server is registered either way
+        print(f"  ✗ Meta rejected the token: {e}")
+    finally:
+        await client.aclose()
 
 
 def main() -> None:
