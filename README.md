@@ -83,6 +83,10 @@ claude mcp add google-ads \
   -- /path/to/Concept-1/.venv/bin/google-ads-mcp
 ```
 
+### Cloud sessions (Equal AI runner)
+
+`.mcp.json` starts both servers in every Claude Code session on this repo, installing them on first use. In cloud sessions the credentials come from environment variables set by the runner admin: see [docs/runner-setup.md](docs/runner-setup.md). On a Mac it reuses the credentials saved by `setup_claude.py`.
+
 ### Claude desktop app
 
 After `scripts/setup_claude.py` has worked, copy the same servers into the Claude desktop app (no need to re-enter anything), then quit and reopen the app:

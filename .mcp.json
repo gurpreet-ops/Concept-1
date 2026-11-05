@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "google-ads": {
+      "command": "bash",
+      "args": ["scripts/run_server.sh", "google-ads"]
+    },
+    "meta-ads": {
+      "command": "bash",
+      "args": ["scripts/run_server.sh", "meta-ads"]
+    }
+  }
+}
